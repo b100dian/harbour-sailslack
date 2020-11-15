@@ -6,27 +6,34 @@
 class Storage
 {
 public:
-    QVariantMap user(QVariant id);
+    QVariantMap user(const QString &id);
     QVariantList users();
     void saveUser(QVariantMap user);
 
-    QVariantMap channel(QVariant id);
+    QVariantMap channel(const QString &id);
     QVariantList channels();
     void saveChannel(QVariantMap channel);
 
-    QVariantList channelMessages(QVariant channelId);
-    bool channelMessagesExist(QVariant channelId);
-    void setChannelMessages(QVariant channelId, QVariantList messages);
-    void prependChannelMessages(QVariant channelId, QVariantList messages);
-    void appendChannelMessage(QVariant channelId, QVariantMap message);
+    QVariantList channelMessages(const QString &channelId);
+    bool channelMessagesExist(const QString &channelId);
+
+    void prependChannelMessages(const QString &channelId, QVariantList messages);
+    void appendChannelMessage(const QString &channelId, QVariantMap message);
     void clearChannelMessages();
+
+    void appendThreadMessage(const QString &threadId, QVariantMap message);
 
     void clear();
 
+protected:
+    void setChannelMessages(const QString &channelId, QVariantList messages);
+
 private:
+
     QVariantMap userMap;
     QVariantMap channelMap;
     QVariantMap channelMessageMap;
+    QVariantMap threadMessageMap;
 };
 
 #endif // STORAGE_H

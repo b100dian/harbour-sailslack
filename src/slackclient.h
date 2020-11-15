@@ -43,7 +43,7 @@ public:
     Q_INVOKABLE void setActiveWindow(QString windowId);
 
     Q_INVOKABLE QVariantList getChannels();
-    Q_INVOKABLE QVariant getChannel(QString channelId);
+    Q_INVOKABLE QVariant getChannel(const QString& channelId);
 
     SlackClientConfig *getConfig() const { return this->config; }
     bool getInitialized() const { return initialized; }
@@ -113,7 +113,7 @@ public slots:
     void logout();
     void loadUsers(const QString &cursor = {});
     void markChannel(QString channelId, QString time);
-    void joinChannel(QString channelId);
+    void joinChannel(const QString& channelId);
     void leaveChannel(QString channelId);
     void leaveGroup(QString groupId);
     void openChat(QString chatId);
