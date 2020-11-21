@@ -211,7 +211,7 @@ SilicaListView {
         if (message.type === "message" && message.channel === channel.id) {
             if ((!!message.thread_ts) && (message.thread_ts !== message.timestamp)) {
                 // A message recieved a reply. Is it for this thread?
-                if (mesage.thread_ts !== thread.thread_ts) {
+                if (message.thread_ts !== threadId) {
                     return;
                 }
             }
