@@ -5,6 +5,8 @@ import harbour.sailslack 1.0
 SilicaListView {
     property alias atBottom: listView.atYEnd
     property variant channel
+    property variant thread
+    property string threadId
 
     property Client slackClient
 
@@ -78,7 +80,7 @@ SilicaListView {
     }
 
     header: PageHeader {
-        title: channel.name
+        title: thread && thread.content || channel && channel.name
     }
 
     model: ListModel {
@@ -99,7 +101,11 @@ SilicaListView {
         visible: inputEnabled
         placeholder: qsTr("Message %1%2").arg("#").arg(channel.name)
         onSendMessage: {
-            slackClient.postMessage(channel.id, content)
+            if (thread) {
+                // TODO
+            } else {
+                slackClient.postMessage(channel.id, content)
+            }
         }
     }
 
@@ -143,7 +149,11 @@ SilicaListView {
 
     function markLatest() {
         if (latestRead != "") {
-            slackClient.markChannel(channel.id, latestRead)
+            if (thread) {
+                // TODO
+            } else {
+                slackClient.markChannel(channel.id, latestRead)
+            }
             latestRead = ""
         }
     }
@@ -156,18 +166,30 @@ SilicaListView {
 
     function loadMessages() {
         loading = true
-        slackClient.loadMessages(channel.id)
+        if (thread) {
+            slackClient.loadThreadMessages(threadId, channel.id);
+        } else {
+            slackClient.loadMessages(channel.id)
+        }
     }
 
     function loadHistory() {
         if (messageListModel.count) {
             loading = true
+            // TODO threads
             slackClient.loadHistory(channel.id, messageListModel.get(0).timestamp)
         }
     }
 
-    function handleLoadSuccess(channelId, messages, hasMore) {
-        if (channelId === channel.id) {
+    function handleLoadSuccess(channelId, _threadId, messages, hasMore) {
+        if (_threadId && threadId === _threadId) {
+            hasMoreMessages = hasMore
+            loader.sendMessage({
+                op: 'replace',
+                model: messageListModel,
+                messages: messages
+            })
+        } else if (!_threadId && channelId === channel.id) {
             hasMoreMessages = hasMore
             loader.sendMessage({
                 op: 'replace',
@@ -189,7 +211,15 @@ SilicaListView {
     }
 
     function handleMessageReceived(message) {
+        // TODO thread support
         if (message.type === "message" && message.channel === channel.id) {
+            if ((!!message.thread_ts) && (message.thread_ts !== message.timestamp)) {
+                // A message recieved a reply. Is it for this thread?
+                if (mesage.thread_ts !== thread.thread_ts) {
+                    return;
+                }
+            }
+
             var isAtBottom = atBottom
             messageListModel.append(message)
 

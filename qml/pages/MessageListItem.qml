@@ -15,6 +15,12 @@ ListItem {
     property color infoColor: item.highlighted ? Theme.secondaryHighlightColor : Theme.secondaryColor
     property color textColor: item.highlighted ? Theme.highlightColor : Theme.primaryColor
 
+    onClicked: {
+        if (reply_count > 0) {
+            pageStack.push(Qt.resolvedUrl("Thread.qml"), {"slackClient": slackClient, "channelId": channelId, "threadId": thread_ts});
+        }
+    }
+
     Column {
         id: column
         width: parent.width - Theme.paddingLarge * (Screen.sizeCategory >= Screen.Large ? 4 : 2)
@@ -53,10 +59,10 @@ ListItem {
         Item {
             width: parent.width
             height: childrenRect.height
-            visible: thread_replies > 0
+            visible: reply_count > 0
 
             Label {
-                text: String(thread_replies)
+                text: String(reply_count)
                 anchors.left: parent.left
                 font.pixelSize: Theme.fontSizeTiny
                 color: infoColor

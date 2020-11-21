@@ -45,6 +45,8 @@ public:
     Q_INVOKABLE QVariantList getChannels();
     Q_INVOKABLE QVariant getChannel(const QString& channelId);
 
+    Q_INVOKABLE QVariant getThread(const QString& threadId);
+
     SlackClientConfig *getConfig() const { return this->config; }
     bool getInitialized() const { return initialized; }
 
@@ -66,7 +68,7 @@ signals:
     void loadUsersSuccess();
     void loadUsersFail();
 
-    void loadMessagesSuccess(QString channelId, QVariantList messages, bool hasMore);
+    void loadMessagesSuccess(QString channelId, QString threadId, QVariantList messages, bool hasMore);
     void loadMessagesFail();
     void loadHistorySuccess(QString channelId, QVariantList messages, bool hasMore);
     void loadHistoryFail();
@@ -109,6 +111,10 @@ public slots:
     void loadHistory(QString channelId, QString latest);
     void loadMessages(QString channelId);
     void handleLoadMessagesReply();
+
+    void loadReplies(const QString& channelId, const QString& threadId, const QString& cursor = QString());
+    // ^^ yes, I'm confused vv
+    void loadThreadMessages(QString threadId, QString channelId);
 
     void logout();
     void loadUsers(const QString &cursor = {});

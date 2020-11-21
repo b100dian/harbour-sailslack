@@ -23,6 +23,10 @@ QVariantMap Storage::channel(const QString &id) {
     return channelMap.value(id).toMap();
 }
 
+QVariantMap Storage::thread(const QString &id) {
+    return threadMap.value(id).toMap();
+}
+
 QVariantList Storage::channels() {
     return channelMap.values();
 }
@@ -35,15 +39,20 @@ bool Storage::channelMessagesExist(const QString &channelId) {
     return channelMessageMap.contains(channelId);
 }
 
-void Storage::setChannelMessages(const QString &channelId, QVariantList messages) {
-    channelMessageMap.insert(channelId, messages); // FIXME
+QVariantList Storage::threadMessages(const QString &threadId) {
+    return threadMessageMap.value(threadId).toList();
 }
 
-void Storage::prependChannelMessages(const QString &channelId, QVariantList messages) {
-    // TODO check for thread messages
-    QVariantList existing = channelMessages(channelId);
-    messages.append(existing);
-    setChannelMessages(channelId, messages);
+bool Storage::threadMessagesExist(const QString &threadId) {
+    return channelMessageMap.contains(threadId);
+}
+
+void Storage::setChannelMessages(const QString &channelId, QVariantList messages) {
+    channelMessageMap.insert(channelId, messages);
+}
+
+void Storage::setThreadMessages(const QString& threadId, QVariantList messages) {
+    threadMessageMap.insert(threadId, messages);
 }
 
 QString messageThread(const QVariantMap& message) {
@@ -56,16 +65,31 @@ bool isThreadStarter(const QVariantMap& message) {
     return message.value("thread_ts") == message.value("timestamp");
 }
 
-void Storage::appendChannelMessage(const QString &channelId, QVariantMap message) {
+void Storage::prependChannelMessages(const QString &channelId, QVariantList messages) {
+    // TODO check for thread messages
+    QVariantList existing = channelMessages(channelId);
+    messages.append(existing);
+    for (auto &message : messages) {
+        auto threadId = messageThread(message.toMap());
+        appendThreadMessage(threadId, message.toMap());
+    }
+    setChannelMessages(channelId, messages);
+}
+
+bool Storage::appendChannelMessage(const QString &channelId, QVariantMap message) {
+    bool result = false;
     QVariantList messages = channelMessages(channelId);
-    auto thread = messageThread(message);
-    if (thread.isEmpty() || isThreadStarter(message)) {
+    auto threadId = messageThread(message);
+    if (threadId.isEmpty() || isThreadStarter(message)) {
         messages.append(message);
         setChannelMessages(channelId, messages);
+        result = true;
     }
-    if (!thread.isEmpty()) {
-        appendThreadMessage(thread, message);
+    if (!threadId.isEmpty()) {
+        appendThreadMessage(threadId, message);
     }
+
+    return result;
 }
 
 void Storage::clearChannelMessages() {
@@ -76,6 +100,7 @@ void Storage::appendThreadMessage(const QString &threadId, QVariantMap message) 
     if(isThreadStarter(message)) {
         if (!threadMessageMap.contains(threadId)) {
             threadMessageMap.insert(threadId, QVariantList({message}));
+            threadMap.insert(threadId, message);
         } else {
             qDebug() << "Thread already exists:" << threadId;
         }
@@ -95,16 +120,13 @@ void Storage::appendThreadMessage(const QString &threadId, QVariantMap message) 
         return;
     }
 
-    // Update replies count
-    auto threadStarter = messages.first().toMap();
-    threadStarter.insert("thread_replies", messages.size() - 1);
-
-    threadMessageMap.insert(threadId, messages);
+    setThreadMessages(threadId, messages);
 }
 
 void Storage::clear() {
     userMap.clear();
     channelMap.clear();
     channelMessageMap.clear();
+    threadMap.clear();
     threadMessageMap.clear();
 }

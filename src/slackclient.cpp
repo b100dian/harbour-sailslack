@@ -260,10 +260,11 @@ void SlackClient::parseChannelUpdate(QJsonObject message) {
 
 void SlackClient::parseMessageUpdate(QJsonObject message) {
     QVariantMap data = getMessageData(message);
+    bool appendToChannel = false;
 
     QString channelId = message.value("channel").toString();
     if (storage.channelMessagesExist(channelId)) {
-        storage.appendChannelMessage(channelId, data);
+        appendToChannel = storage.appendChannelMessage(channelId, data);
     }
 
     QVariantMap channel = storage.channel(channelId);
@@ -286,7 +287,7 @@ void SlackClient::parseMessageUpdate(QJsonObject message) {
         }
     }
 
-    // FIXME appending
+    // FIXME appending to thread
     emit messageReceived(data);
 }
 
@@ -646,8 +647,10 @@ QVariantMap SlackClient::parseGroup(QJsonObject group) {
                 memberIds << memberId;
             }
         }
+        QString name = members.length() ? members.join(", ")
+                                        : group.value("name_normalized").toString().replace("mpdm-", "").replace("--", ", ");
         int unreadCount = group.value("unread_count_display").toInt();
-        data.insert("name", QVariant(members.join(", ")));
+        data.insert("name", QVariant(name));
         data.insert("memberIds", memberIds);
         data.insert("unreadCount", unreadCount);
     }
@@ -729,6 +732,56 @@ QVariantList SlackClient::getChannels() {
 
 QVariant SlackClient::getChannel(const QString& channelId) {
     return storage.channel(channelId);
+}
+
+QVariant SlackClient::getThread(const QString& threadId) {
+    return storage.thread(threadId);
+}
+
+void SlackClient::loadReplies(const QString& channelId, const QString& threadId, const QString& cursor) {
+    qDebug() << channelId << "@" << threadId << ": Replies load start" << cursor;
+
+    QMap<QString,QString> params;
+    params.insert("channe", channelId);
+    params.insert("ts", threadId);
+    params.insert("limit", "1000"); // the API limit
+
+    if (!cursor.isEmpty()) {
+        params.insert("cursor", cursor);
+    }
+
+    QNetworkReply* reply = executeGet("conversation.replies", params);
+    connect(reply, &QNetworkReply::finished, [reply, this, channelId, threadId]() {
+      QJsonObject data = Request::getResult(reply);
+
+      if (Request::isError(data)) {
+        qDebug() << channelId << "@" << threadId << ": Replies load failed";
+      }
+      else {
+        auto combinator = AsyncFuture::combine();
+        QString nextCursor = Request::nextCursor(data);
+
+        QVariantList messages = parseMessages(data);
+        bool hasMore = data.value("has_more").toBool();
+
+        if (!threadId.isEmpty()) {
+            for (auto& message: messages) {
+                storage.appendThreadMessage(threadId, message.toMap());
+            }
+        }
+
+        AsyncFuture::observe(combinator.future()).subscribe([nextCursor, channelId, threadId, hasMore ,this]() {
+            if (nextCursor.isEmpty()) {
+                emit loadMessagesSuccess(channelId, threadId, storage.threadMessages(threadId), hasMore);
+            }
+            else {
+                loadConversations(nextCursor);
+            }
+        });
+      }
+
+      reply->deleteLater();
+    });
 }
 
 void SlackClient::loadConversations(QString cursor) {
@@ -919,7 +972,7 @@ void SlackClient::loadHistory(QString channelId, QString latest) {
 void SlackClient::loadMessages(QString channelId) {
     if (storage.channelMessagesExist(channelId)) {
         QVariantList messages = storage.channelMessages(channelId);
-        emit loadMessagesSuccess(channelId, messages, true);
+        emit loadMessagesSuccess(channelId, QString(), messages, true);
         return;
     }
 
@@ -929,6 +982,25 @@ void SlackClient::loadMessages(QString channelId) {
 
     QNetworkReply* reply = executeGet("conversations.history", params);
     reply->setProperty("channelId", channelId);
+    connect(reply, SIGNAL(finished()), this, SLOT(handleLoadMessagesReply()));
+}
+
+// UNUSED?
+void SlackClient::loadThreadMessages(QString threadId, QString channelId) {
+    if (storage.threadMessagesExist(threadId)) {
+        QVariantList messages = storage.threadMessages(threadId);
+        emit loadMessagesSuccess(threadId, QString(), messages, true);
+        return;
+    }
+
+    QMap<QString,QString> params;
+    params.insert("channel", channelId);
+    params.insert("ts", threadId);
+    params.insert("limit", "1000");
+
+    QNetworkReply* reply = executeGet("conversations.replies", params);
+    reply->setProperty("channelId", channelId);
+    reply->setProperty("thread_ts", threadId);
     connect(reply, SIGNAL(finished()), this, SLOT(handleLoadMessagesReply()));
 }
 
@@ -947,11 +1019,15 @@ void SlackClient::handleLoadMessagesReply() {
     bool hasMore = data.value("has_more").toBool();
     QString channelId = reply->property("channelId").toString();
 
-    for (auto& message: messages) {
-        storage.appendChannelMessage(channelId, message.toMap());
+    QString threadId = reply->property("thread_ts").toString();
+
+    if (!channelId.isEmpty() && threadId.isEmpty()) {
+        storage.setChannelMessages(channelId, messages);
+    } else if (!threadId.isEmpty()) {
+        storage.setThreadMessages(threadId, messages);
     }
 
-    emit loadMessagesSuccess(channelId, messages, hasMore);
+    emit loadMessagesSuccess(channelId, threadId, messages, hasMore);
     reply->deleteLater();
 }
 
@@ -1077,11 +1153,12 @@ QVariantMap SlackClient::getMessageData(const QJsonObject message) {
 
     QVariantMap data;
     data.insert("type", message.value("type").toVariant());
+    data.insert("subtype", message.value("subtype").toVariant());
     data.insert("time", QVariant::fromValue(time));
     data.insert("timegroup", QVariant::fromValue(time.toString("MMMM d, yyyy")));
     data.insert("timestamp", message.value("ts").toVariant());
     data.insert("thread_ts", message.value("thread_ts").toVariant());
-    data.insert("thread_replies", QVariant::fromValue(0));
+    data.insert("reply_count", message.value("reply_count").toInt());
     data.insert("channel", message.value("channel").toVariant());
     data.insert("user", user(message));
     data.insert("attachments", getAttachments(message));
