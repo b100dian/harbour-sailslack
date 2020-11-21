@@ -112,8 +112,6 @@ public slots:
     void loadMessages(QString channelId);
     void handleLoadMessagesReply();
 
-    void loadReplies(const QString& channelId, const QString& threadId, const QString& cursor = QString());
-    // ^^ yes, I'm confused vv
     void loadThreadMessages(QString threadId, QString channelId);
 
     void logout();
@@ -124,7 +122,7 @@ public slots:
     void leaveGroup(QString groupId);
     void openChat(QString chatId);
     void closeChat(QString chatId);
-    void postMessage(QString channelId, QString content);
+    void postMessage(QString channelId, QString threadId, QString content);
     void postImage(QString channelId, QString imagePath, QString title, QString comment);
     void loadUserInfo(QString userId);
 

@@ -166,9 +166,7 @@ void SlackClient::handleStreamMessage(QJsonObject message) {
     if (type == "message") {
         if (message.value("subtype") == QStringLiteral("message_replied")) {
             QJsonObject innerMessage = message.value("message").toObject();
-            qDebug() << "TODO update this message thread:"
-                     << innerMessage.value("thread_ts") << " reply count:"
-                     << innerMessage.value("reply_count");
+            storage.createOrUpdateThread(message.value("thread_ts").toString(), getMessageData(innerMessage));
         } else {
             parseMessageUpdate(message);
         }
@@ -738,52 +736,6 @@ QVariant SlackClient::getThread(const QString& threadId) {
     return storage.thread(threadId);
 }
 
-void SlackClient::loadReplies(const QString& channelId, const QString& threadId, const QString& cursor) {
-    qDebug() << channelId << "@" << threadId << ": Replies load start" << cursor;
-
-    QMap<QString,QString> params;
-    params.insert("channe", channelId);
-    params.insert("ts", threadId);
-    params.insert("limit", "1000"); // the API limit
-
-    if (!cursor.isEmpty()) {
-        params.insert("cursor", cursor);
-    }
-
-    QNetworkReply* reply = executeGet("conversation.replies", params);
-    connect(reply, &QNetworkReply::finished, [reply, this, channelId, threadId]() {
-      QJsonObject data = Request::getResult(reply);
-
-      if (Request::isError(data)) {
-        qDebug() << channelId << "@" << threadId << ": Replies load failed";
-      }
-      else {
-        auto combinator = AsyncFuture::combine();
-        QString nextCursor = Request::nextCursor(data);
-
-        QVariantList messages = parseMessages(data);
-        bool hasMore = data.value("has_more").toBool();
-
-        if (!threadId.isEmpty()) {
-            for (auto& message: messages) {
-                storage.appendThreadMessage(threadId, message.toMap());
-            }
-        }
-
-        AsyncFuture::observe(combinator.future()).subscribe([nextCursor, channelId, threadId, hasMore ,this]() {
-            if (nextCursor.isEmpty()) {
-                emit loadMessagesSuccess(channelId, threadId, storage.threadMessages(threadId), hasMore);
-            }
-            else {
-                loadConversations(nextCursor);
-            }
-        });
-      }
-
-      reply->deleteLater();
-    });
-}
-
 void SlackClient::loadConversations(QString cursor) {
   qDebug() << config->getTeamName() << ": Conversation load start" << cursor;
 
@@ -1063,7 +1015,7 @@ void SlackClient::markChannel(QString channelId, QString time) {
     });
 }
 
-void SlackClient::postMessage(QString channelId, QString content) {
+void SlackClient::postMessage(QString channelId, QString threadId, QString content) {
     content.replace(QRegularExpression("&"), "&amp;");
     content.replace(QRegularExpression(">"), "&gt;");
     content.replace(QRegularExpression("<"), "&lt;");
@@ -1073,6 +1025,9 @@ void SlackClient::postMessage(QString channelId, QString content) {
     data.insert("text", content);
     data.insert("as_user", "true");
     data.insert("parse", "full");
+    if (!threadId.isEmpty()) {
+        data.insert("thread_ts", threadId);
+    }
 
     QNetworkReply* reply = executePost("chat.postMessage", data);
     connect(reply, &QNetworkReply::finished, [reply,this]() {

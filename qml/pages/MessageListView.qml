@@ -101,11 +101,7 @@ SilicaListView {
         visible: inputEnabled
         placeholder: qsTr("Message %1%2").arg("#").arg(channel.name)
         onSendMessage: {
-            if (thread) {
-                // TODO
-            } else {
-                slackClient.postMessage(channel.id, content)
-            }
+            slackClient.postMessage(channel.id, threadId ? threadId : "", content)
         }
     }
 

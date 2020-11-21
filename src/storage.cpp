@@ -65,13 +65,28 @@ bool isThreadStarter(const QVariantMap& message) {
     return message.value("thread_ts") == message.value("timestamp");
 }
 
+void Storage::createOrUpdateThread(const QString &threadId, QVariantMap message) {
+    Q_ASSERT(isThreadStarter(message));
+    if (!threadMap.contains(threadId)) {
+        threadMessageMap.insert(threadId, QVariantList({message}));
+        threadMap.insert(threadId, message);
+    } else {
+        qDebug() << "Thread already exists:" << threadId;
+    }
+
+    // Search the starting message in its channel
+    // (or better do this from JS)
+}
+
 void Storage::prependChannelMessages(const QString &channelId, QVariantList messages) {
     // TODO check for thread messages
     QVariantList existing = channelMessages(channelId);
     messages.append(existing);
     for (auto &message : messages) {
         auto threadId = messageThread(message.toMap());
-        appendThreadMessage(threadId, message.toMap());
+        if (!threadId.isEmpty()) {
+            appendThreadMessage(threadId, message.toMap());
+        }
     }
     setChannelMessages(channelId, messages);
 }
@@ -98,12 +113,7 @@ void Storage::clearChannelMessages() {
 
 void Storage::appendThreadMessage(const QString &threadId, QVariantMap message) {
     if(isThreadStarter(message)) {
-        if (!threadMessageMap.contains(threadId)) {
-            threadMessageMap.insert(threadId, QVariantList({message}));
-            threadMap.insert(threadId, message);
-        } else {
-            qDebug() << "Thread already exists:" << threadId;
-        }
+        createOrUpdateThread(threadId, message);
     }
 
     auto messages = threadMessageMap.value(threadId).toList();

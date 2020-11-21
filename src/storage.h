@@ -22,6 +22,7 @@ public:
     QVariantList threadMessages(const QString &threadId);
     bool threadMessagesExist(const QString &threadId);
     void setThreadMessages(const QString& threadId, QVariantList messages);
+    void createOrUpdateThread(const QString &threadId, QVariantMap message);
 
     void prependChannelMessages(const QString &channelId, QVariantList messages);
     bool appendChannelMessage(const QString &channelId, QVariantMap message);
