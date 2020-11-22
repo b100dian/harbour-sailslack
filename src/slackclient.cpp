@@ -646,6 +646,7 @@ QVariantMap SlackClient::parseGroup(QJsonObject group) {
         }
         QString name = members.length() ? members.join(", ")
                                         : group.value("name_normalized").toString().replace("mpdm-", "").replace("--", ", ");
+        if (name.endsWith("-1")) name.chop(2);
         int unreadCount = group.value("unread_count_display").toInt();
         data.insert("name", QVariant(name));
         data.insert("memberIds", memberIds);
@@ -782,9 +783,6 @@ void SlackClient::loadConversations(QString cursor) {
             }
             else if (infoData.value("is_channel").toBool()) {
               channel = parseChannel(infoData);
-            }
-            else if (infoData.value("is_thread_only").toBool()) {
-                qDebug("OOO thread");
             }
             else {
               channel = parseGroup(infoData);
@@ -936,7 +934,6 @@ void SlackClient::loadMessages(QString channelId) {
     connect(reply, SIGNAL(finished()), this, SLOT(handleLoadMessagesReply()));
 }
 
-// UNUSED?
 void SlackClient::loadThreadMessages(QString threadId, QString channelId) {
     if (storage.threadMessagesExist(threadId)) {
         QVariantList messages = storage.threadMessages(threadId);

@@ -190,7 +190,6 @@ SilicaListView {
     function loadHistory() {
         if (messageListModel.count) {
             loading = true
-            // TODO threads
             slackClient.loadHistory(channel.id, messageListModel.get(0).timestamp)
         }
     }

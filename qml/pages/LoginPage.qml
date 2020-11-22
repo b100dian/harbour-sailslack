@@ -55,7 +55,6 @@ WebViewPage {
         webView {
             active: true
             url: page.startUrl + "&state=" + page.processId
-            privateMode: true
 
             onUrlChanged: {
                 // This is currently not called for redirects (at least not in sailfish-components-webview 1.1.6.1).
