@@ -218,7 +218,7 @@ SilicaListView {
         }
     }
 
-    function handleMessageReceived(message) {
+    function handleMessageReceived(message, update) {
         if (message.type === "message" && message.channel === channel.id) {
             if ((message.thread_ts) && (message.thread_ts !== message.timestamp)) {
                 // A message received a reply. Is it for this thread?
@@ -227,9 +227,18 @@ SilicaListView {
                 }
             }
 
-            var isAtBottom = atBottom
-            messageListModel.append(message)
+            if (update) {
+                for (var i = 0; i < messageListModel.count; i++) {
+                    if (messageListModel.get(i).timestamp === message.timestamp) {
+                        messageListModel.set(i, message);
+                        break;
+                    }
+                }
+            } else {
+                messageListModel.append(message)
+            }
 
+            var isAtBottom = atBottom
             if (isAtBottom) {
                 listView.positionViewAtEnd()
 

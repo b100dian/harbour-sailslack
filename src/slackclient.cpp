@@ -166,7 +166,13 @@ void SlackClient::handleStreamMessage(QJsonObject message) {
     if (type == "message") {
         if (message.value("subtype") == QStringLiteral("message_replied")) {
             QJsonObject innerMessage = message.value("message").toObject();
+            innerMessage.insert("channel", message.value("channel"));
             storage.createOrUpdateThread(innerMessage.value("thread_ts").toString(), getMessageData(innerMessage));
+            parseMessageUpdate(innerMessage, true);
+        } else if (message.value("subtype") == QStringLiteral("message_changed")) {
+            QJsonObject innerMessage = message.value("message").toObject();
+            innerMessage.insert("channel", message.value("channel"));
+            parseMessageUpdate(innerMessage, true);
         } else {
             parseMessageUpdate(message);
         }
@@ -256,7 +262,7 @@ void SlackClient::parseChannelUpdate(QJsonObject message) {
     }
 }
 
-void SlackClient::parseMessageUpdate(QJsonObject message) {
+void SlackClient::parseMessageUpdate(QJsonObject message, bool update) {
     QVariantMap data = getMessageData(message);
     bool appendToChannel = false;
 
@@ -285,7 +291,7 @@ void SlackClient::parseMessageUpdate(QJsonObject message) {
         }
     }
 
-    emit messageReceived(data);
+    emit messageReceived(data, update);
 }
 
 void SlackClient::parsePresenceChange(QJsonObject message) {

@@ -86,7 +86,7 @@ signals:
     void updateChannelUnreadCountFailed(QString);
     void updateImUnreadCountFailed(QString);
 
-    void messageReceived(QVariantMap message);
+    void messageReceived(QVariantMap message, bool update);
     void channelUpdated(QVariantMap channel);
     void channelJoined(QVariantMap channel);
     void channelLeft(QVariantMap channel);
@@ -151,7 +151,7 @@ private:
 
     void loadConversations(QString cursor = QString());
 
-    void parseMessageUpdate(QJsonObject message);
+    void parseMessageUpdate(QJsonObject message, bool update = false);
     void parseChannelUpdate(QJsonObject message);
     void parseChannelJoin(QJsonObject message);
     void parseChannelLeft(QJsonObject message);

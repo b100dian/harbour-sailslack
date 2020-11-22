@@ -56,8 +56,17 @@ ListItem {
             visible: reply_count > 0
 
             Label {
-                text: String(reply_count)
+                id: replies
+                text: qsTr("Replies")
                 anchors.left: parent.left
+                font.italic: true
+                font.pixelSize: Theme.fontSizeTiny
+                color: infoColor
+            }
+
+            Label {
+                text: " : " + String(reply_count)
+                anchors.left: replies.right
                 font.pixelSize: Theme.fontSizeTiny
                 color: infoColor
             }

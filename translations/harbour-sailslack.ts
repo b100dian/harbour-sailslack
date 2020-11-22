@@ -225,16 +225,21 @@ Are you sure you wish to leave?</source>
         <source>User Details</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <location filename="../qml/pages/MessageListItem.qml" line="60"/>
+        <source>Replies</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>MessageListView</name>
     <message>
-        <location filename="../qml/pages/MessageListView.qml" line="38"/>
+        <location filename="../qml/pages/MessageListView.qml" line="39"/>
         <source>User Details</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/pages/MessageListView.qml" line="100"/>
+        <location filename="../qml/pages/MessageListView.qml" line="107"/>
         <source>Message %1%2</source>
         <translation type="unfinished"></translation>
     </message>
@@ -242,18 +247,18 @@ Are you sure you wish to leave?</source>
 <context>
     <name>SlackClient</name>
     <message>
-        <location filename="../src/slackclient.cpp" line="322"/>
+        <location filename="../src/slackclient.cpp" line="336"/>
         <source>in %1 @ %2</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/slackclient.cpp" line="325"/>
+        <location filename="../src/slackclient.cpp" line="339"/>
         <source>from %1 @ %2</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/slackclient.cpp" line="328"/>
-        <source>New message</source>
+        <location filename="../src/slackclient.cpp" line="342"/>
+        <source>new messages</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
