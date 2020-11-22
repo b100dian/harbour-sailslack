@@ -1,6 +1,7 @@
 #include "teamsmodel.h"
 
 #include <QQmlEngine>
+#include <functional>
 
 Q_DECLARE_METATYPE(SlackClient*)
 

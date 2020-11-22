@@ -22,7 +22,7 @@ QT += concurrent dbus
 
 include(vendor/vendor.pri)
 
-VERSION = "1.4.3"
+VERSION = "1.4.4"
 DEFINES += APP_VERSION=\\\"$${VERSION}\\\"
 
 # Check slack config
@@ -115,6 +115,7 @@ DISTFILES += \
     data/emoji.json \
     qml/pages/TeamList.qml \
     qml/pages/TeamList.js \
+    qml/pages/Thread.qml \
     qml/pages/UserView.qml
 
 RESOURCES += \
