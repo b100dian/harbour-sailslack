@@ -27,7 +27,6 @@ Page {
         MessageListView {
             id: listView
             thread: page.thread
-            threadId: page.threadId
             channel: page.channel
             anchors.fill: parent
             slackClient: page.slackClient
@@ -39,17 +38,6 @@ Page {
             onLoadStarted: {
                 loader.visible = true
             }
-
-//            PushUpMenu {
-//                id: bottomMenu
-
-//                MenuItem {
-//                    text: qsTr("Upload image")
-//                    onClicked: {
-//                        pageStack.push(Qt.resolvedUrl("FileSend.qml"), { "slackClient": page.slackClient, "threadId": page.threadId})
-//                    }
-//                }
-//            }
         }
     }
 
@@ -60,7 +48,6 @@ Page {
     Component.onCompleted: {
         page.channel = slackClient.getChannel(page.channelId)
         page.thread = slackClient.getThread(page.threadId)
-//        slackClient.loadReplies(page.channelId, page.threadId);
     }
 
     onStatusChanged: {

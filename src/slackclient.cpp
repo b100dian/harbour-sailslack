@@ -166,7 +166,7 @@ void SlackClient::handleStreamMessage(QJsonObject message) {
     if (type == "message") {
         if (message.value("subtype") == QStringLiteral("message_replied")) {
             QJsonObject innerMessage = message.value("message").toObject();
-            storage.createOrUpdateThread(message.value("thread_ts").toString(), getMessageData(innerMessage));
+            storage.createOrUpdateThread(innerMessage.value("thread_ts").toString(), getMessageData(innerMessage));
         } else {
             parseMessageUpdate(message);
         }
@@ -285,7 +285,6 @@ void SlackClient::parseMessageUpdate(QJsonObject message) {
         }
     }
 
-    // FIXME appending to thread
     emit messageReceived(data);
 }
 

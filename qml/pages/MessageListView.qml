@@ -6,7 +6,6 @@ SilicaListView {
     property alias atBottom: listView.atYEnd
     property variant channel
     property variant thread
-    property string threadId
 
     property Client slackClient
 
@@ -80,14 +79,20 @@ SilicaListView {
     }
 
     header: PageHeader {
-        title: thread && thread.content || channel && channel.name
+        title: getTitle()
     }
 
     model: ListModel {
         id: messageListModel
     }
 
-    delegate: MessageListItem {}
+    delegate: MessageListItem {
+        onClicked: {
+            if (reply_count > 0 && !thread) {
+                pageStack.push(Qt.resolvedUrl("Thread.qml"), {"slackClient": slackClient, "channelId": channelId, "threadId": thread_ts});
+            }
+        }
+    }
 
     section {
         property: "timegroup"
@@ -101,7 +106,8 @@ SilicaListView {
         visible: inputEnabled
         placeholder: qsTr("Message %1%2").arg("#").arg(channel.name)
         onSendMessage: {
-            slackClient.postMessage(channel.id, threadId ? threadId : "", content)
+            var threadId = thread && thread.thread_ts;
+            slackClient.postMessage(channel.id, threadId || "", content)
         }
     }
 
@@ -143,6 +149,18 @@ SilicaListView {
         slackClient.onMessageReceived.disconnect(handleMessageReceived)
     }
 
+    function getTitle() {
+        var result = "Thread";
+        if (thread) {
+            if (thread.content) {
+                result = thread.content;
+            }
+        } else {
+            result = channel.name;
+        }
+        return result;
+    }
+
     function markLatest() {
         if (latestRead != "") {
             if (thread) {
@@ -163,7 +181,7 @@ SilicaListView {
     function loadMessages() {
         loading = true
         if (thread) {
-            slackClient.loadThreadMessages(threadId, channel.id);
+            slackClient.loadThreadMessages(thread.thread_ts, channel.id);
         } else {
             slackClient.loadMessages(channel.id)
         }
@@ -177,15 +195,10 @@ SilicaListView {
         }
     }
 
-    function handleLoadSuccess(channelId, _threadId, messages, hasMore) {
-        if (_threadId && threadId === _threadId) {
-            hasMoreMessages = hasMore
-            loader.sendMessage({
-                op: 'replace',
-                model: messageListModel,
-                messages: messages
-            })
-        } else if (!_threadId && channelId === channel.id) {
+    function handleLoadSuccess(channelId, threadId, messages, hasMore) {
+        var isForThisThread = threadId && thread && threadId === thread.thread_ts;
+        var isForThisChannel = !threadId && channelId === channel.id;
+        if (isForThisChannel || isForThisThread) {
             hasMoreMessages = hasMore
             loader.sendMessage({
                 op: 'replace',
@@ -207,11 +220,10 @@ SilicaListView {
     }
 
     function handleMessageReceived(message) {
-        // TODO thread support
         if (message.type === "message" && message.channel === channel.id) {
-            if ((!!message.thread_ts) && (message.thread_ts !== message.timestamp)) {
-                // A message recieved a reply. Is it for this thread?
-                if (message.thread_ts !== threadId) {
+            if ((message.thread_ts) && (message.thread_ts !== message.timestamp)) {
+                // A message received a reply. Is it for this thread?
+                if (message.thread_ts !== thread.thread_ts) {
                     return;
                 }
             }
