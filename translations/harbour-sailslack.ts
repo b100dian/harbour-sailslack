@@ -63,17 +63,17 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/pages/ChannelListView.qml" line="106"/>
+        <location filename="../qml/pages/ChannelListView.qml" line="105"/>
         <source>Unreads</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/pages/ChannelListView.qml" line="109"/>
+        <location filename="../qml/pages/ChannelListView.qml" line="108"/>
         <source>Channels</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/pages/ChannelListView.qml" line="112"/>
+        <location filename="../qml/pages/ChannelListView.qml" line="111"/>
         <source>Direct messages</source>
         <translation type="unfinished"></translation>
     </message>
@@ -262,17 +262,17 @@ Are you sure you wish to leave?</source>
 <context>
     <name>SlackClient</name>
     <message>
-        <location filename="../src/slackclient.cpp" line="337"/>
+        <location filename="../src/slackclient.cpp" line="339"/>
         <source>in %1 @ %2</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/slackclient.cpp" line="340"/>
+        <location filename="../src/slackclient.cpp" line="342"/>
         <source>from %1 @ %2</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/slackclient.cpp" line="343"/>
+        <location filename="../src/slackclient.cpp" line="345"/>
         <source>new messages</source>
         <translation type="unfinished"></translation>
     </message>
