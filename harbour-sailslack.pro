@@ -22,7 +22,7 @@ QT += concurrent dbus
 
 include(vendor/vendor.pri)
 
-VERSION = "1.4.6"
+VERSION = "1.4.8"
 DEFINES += APP_VERSION=\\\"$${VERSION}\\\"
 
 # Check slack config
