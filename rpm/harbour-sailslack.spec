@@ -13,7 +13,7 @@ Name:       harbour-sailslack
 %{!?qtc_make:%define qtc_make make}
 %{?qtc_builddir:%define _builddir %qtc_builddir}
 Summary:    Unoffical Slack client for Sailfish
-Version:    1.4.8
+Version:    1.4.9
 Release:    1
 Group:      Qt/Qt
 License:    LICENSE
