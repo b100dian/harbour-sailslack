@@ -6,6 +6,10 @@ ListItem {
     id: item
     contentHeight: column.height + Theme.paddingMedium
     signal openThread(string threadId)
+    signal markUnread(string timestamp)
+
+    property Client slackClient
+    property bool isUnread
 
     property Client slackClient
 
@@ -17,6 +21,13 @@ ListItem {
                 openThread(timestamp)
             }
         }
+        MenuItem {
+            text: qsTr("Mark unread")
+            onClicked: {
+                markUnread(timestamp)
+            }
+        }
+
         MenuItem {
             text: qsTr("User Details")
             onClicked: showUserDetails(user.id)
@@ -55,6 +66,7 @@ ListItem {
             id: contentLabel
             width: parent.width
             font.pixelSize: Theme.fontSizeSmall
+            font.weight: isUnread ? Font.Bold : Font.Normal
             color: textColor
             visible: text.length > 0
             value: content
