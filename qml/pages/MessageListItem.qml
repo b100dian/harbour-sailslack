@@ -11,8 +11,6 @@ ListItem {
     property Client slackClient
     property bool isUnread
 
-    property Client slackClient
-
     menu: ContextMenu {
         MenuItem {
             visible: !page.threadId
