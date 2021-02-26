@@ -84,6 +84,10 @@ void SlackClient::clearNotifications(QString channelId) {
 }
 
 void SlackClient::handleNetworkAccessibleChanged(QNetworkAccessManager::NetworkAccessibility accessible) {
+    if (networkAccessible == accessible) {
+        return;
+    }
+
     qDebug() << "Network accessible changed" << accessible;
     networkAccessible = accessible;
 
