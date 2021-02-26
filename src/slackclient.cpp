@@ -573,6 +573,10 @@ void SlackClient::start() {
         if (Request::isError(data)) {
             qDebug() << config->getTeamName() << ": Connect result error";
             setConnectionStatus(Disconnected);
+            if (initialized) {
+                initialized = false;
+                Q_EMIT initializedChanged();
+            }
             emit initFail();
         }
         else {
