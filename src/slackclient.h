@@ -82,7 +82,7 @@ signals:
     void loadUserInfoFail(QString userId);
 
     void initFail();
-    void initSuccess();
+    void initSuccess(SlackClient*);
     void initializedChanged();
 
     void reconnectFail();
