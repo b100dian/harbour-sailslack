@@ -68,6 +68,14 @@ Page {
         initLoading()
     }
 
+    Component.onDestruction: {
+        slackClient.onTestLoginSuccess.disconnect(handleLoginTestSuccess)
+        slackClient.onTestLoginFail.disconnect(handleLoginTestFail)
+        slackClient.onInitSuccess.disconnect(handleInitSuccess)
+        slackClient.onInitFail.disconnect(handleInitFail)
+        slackClient.onTestConnectionFail.disconnect(handleConnectionFail)
+    }
+
     function initLoading() {
         loading = true
         slackClient.testLogin()
