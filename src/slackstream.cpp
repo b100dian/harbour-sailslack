@@ -41,12 +41,6 @@ void SlackStream::listen(QUrl url) {
     webSocket->open(url);
     }
 
-    qDebug() << "Socket URL" << socketUrl << resource;
-
-    webSocket->setResourceName(resource);
-    webSocket->connectToHost(socketUrl);
-}
-
 void SlackStream::send(QJsonObject message) {
     message.insert("id", QJsonValue(lastMessageId.fetchAndAddRelaxed(1)));
     QJsonDocument document(message);
