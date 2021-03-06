@@ -26,7 +26,14 @@ SlackStream::~SlackStream() {
 }
 
 void SlackStream::disconnectFromHost() {
+    qDebug() << "Disconnecting socket which is valid: " << webSocket->isValid();
     webSocket->close();
+}
+
+void SlackStream::abort() {
+    webSocket->abort();
+    webSocket->deleteLater();
+    webSocket = new QWebSocket(QString(), QWebSocketProtocol::VersionLatest, this);
 }
 
 void SlackStream::listen(QUrl url) {
@@ -68,6 +75,12 @@ void SlackStream::pong(quint64 elapsedTime, const QByteArray &payload) {
     // TODO disconnect on pong timeout
     qDebug() << elapsedTime;
 }
+
+void SlackStream::readChannelFinished()
+{
+    qDebug();
+}
+
 void SlackStream::handleListerStart() {
     qDebug() << "Socket connected";
     isConnected = true;
@@ -118,3 +131,7 @@ void SlackStream::handleStateChanged(QAbstractSocket::SocketState state) {
     qDebug() << state;
 }
 
+
+void SlackStream::aboutToClose() {
+    qDebug();
+}

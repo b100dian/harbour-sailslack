@@ -93,8 +93,14 @@ void SlackClient::handleNetworkAccessibleChanged(QNetworkAccessManager::NetworkA
 
     if (networkAccessible == QNetworkAccessManager::Accessible) {
         Q_EMIT networkAccessibleChanged(true);
+        if (initialized && !config->getAccessToken().isEmpty()) {
+            qDebug() << config->getTeamName() << ": Stream reconnect scheduled in ";
+            reconnectTimer->setSingleShot(true);
+            reconnectTimer->start(3000);
+        }
     } else {
         Q_EMIT networkAccessibleChanged(false);
+//        stream->abort();
     }
 }
 
@@ -109,7 +115,13 @@ void SlackClient::reconnect() {
     qDebug() << config->getTeamName() << ": Reconnecting";
     setConnectionStatus(Connecting);
 
+    if (networkConfigurationIdentifier != networkAccessManager->configuration().identifier()) {
+        qDebug() << "Aborting the old network config: " << networkConfigurationIdentifier;
+        stream->abort();
+        networkConfigurationIdentifier = networkAccessManager->configuration().identifier();
+    } else {
     start();
+}
 }
 
 void SlackClient::handleStreamStart() {
@@ -151,11 +163,11 @@ void SlackClient::updatePresenceSubscription() {
 void SlackClient::handleStreamEnd() {
     qDebug() << config->getTeamName() << ": Stream ended";
 
-    if (!config->getAccessToken().isEmpty()) {
+    if (networkAccessible && !config->getAccessToken().isEmpty()) {
         qDebug() << config->getTeamName() << ": Stream reconnect scheduled";
         setConnectionStatus(Connecting);
         reconnectTimer->setSingleShot(true);
-        reconnectTimer->start(1000);
+        reconnectTimer->start(3000);
     } else {
         setConnectionStatus(Disconnected);
     }
@@ -561,7 +573,7 @@ void SlackClient::loadUsers(const QString &cursor) {
 }
 
 void SlackClient::start() {
-    qDebug() << config->getTeamName() << ": Connect start";
+    qDebug() << config->getTeamName() << ": Connect start on network config: " << networkConfigurationIdentifier;
 
     QMap<QString,QString> params;
     params.insert("batch_presence_aware", "1");

@@ -24,6 +24,7 @@ signals:
 
 public slots:
     void disconnectFromHost();
+    void abort();
     void listen(QUrl url);
     void send(QJsonObject message);
     void checkConnection();
@@ -33,6 +34,8 @@ public slots:
     void handleError(QAbstractSocket::SocketError error);
     void handleStateChanged(QAbstractSocket::SocketState state);
     void pong(quint64 elapsedTime, const QByteArray &payload);
+    void readChannelFinished();
+    void aboutToClose();
 private:
     QPointer<QWebSocket> webSocket;
     QPointer<QTimer> checkTimer;
