@@ -16,6 +16,9 @@ public:
     explicit SlackStream(QObject *parent = 0);
     ~SlackStream();
 
+    bool hasConnection() { return isConnected; }
+
+
 signals:
     void connected();
     void reconnecting();
@@ -37,6 +40,7 @@ public slots:
     void readChannelFinished();
     void aboutToClose();
 private:
+    void initSocket(const QUrl& url);
     QPointer<QWebSocket> webSocket;
     QPointer<QTimer> checkTimer;
 

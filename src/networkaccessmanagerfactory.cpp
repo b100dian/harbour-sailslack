@@ -26,12 +26,12 @@ NetworkAccessManagerFactory::NetworkAccessManagerFactory() noexcept
     connect(session, SIGNAL(preferredConfigurationChanged(const QNetworkConfiguration&, bool)), this, SLOT(preferredConfigurationChanged(const QNetworkConfiguration&, bool)));
     connect(session, SIGNAL(stateChanged(QNetworkSession::State)), this, SLOT(stateChanged(QNetworkSession::State)));
     connect(session, SIGNAL(error(QNetworkSession::SessionError)), this, SLOT(sessionError(QNetworkSession::SessionError)));
-    session->open();
-    auto activeConfig = session->configuration();
-    qDebug() << "active networkConfiguration " << activeConfig.identifier();
-    if (!session->waitForOpened(5000)) {
-        qDebug() << "Session open error: " << session->error();
-    }
+//    session->open();
+//    auto activeConfig = session->configuration();
+//    qDebug() << "active networkConfiguration " << activeConfig.identifier();
+//    if (!session->waitForOpened(5000)) {
+//        qDebug() << "Session open error: " << session->error();
+//    }
 }
 
 NetworkAccessManagerFactory::~NetworkAccessManagerFactory() {

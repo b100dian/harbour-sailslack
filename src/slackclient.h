@@ -17,6 +17,8 @@
 #include "messageformatter.h"
 #include "emojiprovider.h"
 
+class NetworkManager;
+class NetworkService;
 
 class SlackClient : public QObject
 {
@@ -134,6 +136,8 @@ public slots:
     void loadUserForChat(QString userId, QJsonObject chat);
     void loadUserInfo(QString userId);
 
+    void connectedChanged();
+    void defaultRouteChanged(NetworkService* defaultRoute);
     void handleNetworkAccessibleChanged(QNetworkAccessManager::NetworkAccessibility accessible);
 
     void handleStreamStart();
@@ -202,6 +206,7 @@ private:
     QVariantMap user(const QJsonObject &data);
 
     QPointer<QNetworkAccessManager> networkAccessManager;
+    QPointer<NetworkManager> connManager;
     QPointer<SlackClientConfig> config;
     QPointer<SlackStream> stream;
     QPointer<QTimer> reconnectTimer;
@@ -210,6 +215,7 @@ private:
     EmojiProvider emojiProvider;
 
     QNetworkAccessManager::NetworkAccessibility networkAccessible = QNetworkAccessManager::UnknownAccessibility;
+    QString networkConfigurationIdentifier;
 
     bool initialized = false;
     ConnectionStatus connectionStatus = Disconnected;

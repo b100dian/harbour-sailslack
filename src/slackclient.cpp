@@ -13,11 +13,12 @@
 #include <QHttpMultiPart>
 #include <QtNetwork/QNetworkConfigurationManager>
 #include <nemonotifications-qt5/notification.h>
+#include <connman-qt5/networkmanager.h>
 
 #include "asyncfuture.h"
 #include "requestutils.h"
 #include "slackclient.h"
-
+#include "networkaccessmanager.h"
 #include <algorithm>
 
 SlackClient::SlackClient(QObject *parent)
@@ -30,7 +31,8 @@ SlackClient::SlackClient(const QString &team, QObject *parent)
     , team(team)
     , appActive(true)
     , activeWindow("init")
-    , networkAccessManager(new QNetworkAccessManager(this))
+    , networkAccessManager(new NetworkAccessManager(this))
+    , connManager(new NetworkManager(this))
     , config(new SlackClientConfig(team, this))
     , stream(new SlackStream(this))
     , reconnectTimer(new QTimer(this))
@@ -39,9 +41,12 @@ SlackClient::SlackClient(const QString &team, QObject *parent)
 {
     qDebug() << "Creating SlackClient for" << config->getTeamName();
 
-    networkAccessible = networkAccessManager->networkAccessible();
+    networkAccessible = connManager->connected() ? QNetworkAccessManager::NetworkAccessibility::Accessible : QNetworkAccessManager::NetworkAccessibility::NotAccessible;
+    connect(connManager, SIGNAL(connectedChanged()), this, SLOT(connectedChanged()));
+    connect(connManager, SIGNAL(defaultRouteChanged(NetworkService*)), this, SLOT(defaultRouteChanged(NetworkService*)));
 
-    connect(networkAccessManager, SIGNAL(networkAccessibleChanged(QNetworkAccessManager::NetworkAccessibility)), this, SLOT(handleNetworkAccessibleChanged(QNetworkAccessManager::NetworkAccessibility)));
+    networkConfigurationIdentifier = networkAccessManager->configuration().identifier();
+//    connect(networkAccessManager, SIGNAL(networkAccessibleChanged(QNetworkAccessManager::NetworkAccessibility)), this, SLOT(handleNetworkAccessibleChanged(QNetworkAccessManager::NetworkAccessibility)));
     connect(reconnectTimer, SIGNAL(timeout()), this, SLOT(reconnect()));
 
     connect(stream, SIGNAL(connected()), this, SLOT(handleStreamStart()));
@@ -83,12 +88,27 @@ void SlackClient::clearNotifications(QString channelId) {
   }
 }
 
+void SlackClient::connectedChanged() {
+    auto accessible = connManager->connected() ? QNetworkAccessManager::NetworkAccessibility::Accessible : QNetworkAccessManager::NetworkAccessibility::NotAccessible;
+    handleNetworkAccessibleChanged(accessible);
+}
+
+void SlackClient::defaultRouteChanged(NetworkService* defaultRoute) {
+    qDebug() << "Name: " << defaultRoute->name()
+             << "State: " << defaultRoute->state()
+             << "Type: " << defaultRoute->type()
+             << "Error: " << defaultRoute->error()
+             << "AutoConn: " << defaultRoute->autoConnect()
+             << "Roaming: " << defaultRoute->roaming()
+             << "Valid: " << defaultRoute->isValid();
+}
+
 void SlackClient::handleNetworkAccessibleChanged(QNetworkAccessManager::NetworkAccessibility accessible) {
     if (networkAccessible == accessible) {
         return;
     }
 
-    qDebug() << "Network accessible changed" << accessible;
+    qDebug() << "Network accessible changed " << networkAccessible << " -> " << accessible;
     networkAccessible = accessible;
 
     if (networkAccessible == QNetworkAccessManager::Accessible) {
@@ -115,13 +135,23 @@ void SlackClient::reconnect() {
     qDebug() << config->getTeamName() << ": Reconnecting";
     setConnectionStatus(Connecting);
 
-    if (networkConfigurationIdentifier != networkAccessManager->configuration().identifier()) {
-        qDebug() << "Aborting the old network config: " << networkConfigurationIdentifier;
+    if (stream->hasConnection()) {
+        qDebug("aborting stream that 'has' connection");
         stream->abort();
-        networkConfigurationIdentifier = networkAccessManager->configuration().identifier();
+        //ditch network access manager
+        networkAccessManager.clear();
+        networkAccessManager = new NetworkAccessManager(this);
     } else {
-    start();
-}
+        qDebug("Starting stream that 'hasnt' connection");
+        start();
+    }
+//    if (networkConfigurationIdentifier != networkAccessManager->configuration().identifier()) {
+//        qDebug() << "Aborting the old network config: " << networkConfigurationIdentifier;
+//        stream->abort();
+//        networkConfigurationIdentifier = networkAccessManager->configuration().identifier();
+//    } else {
+//        start();
+//    }
 }
 
 void SlackClient::handleStreamStart() {

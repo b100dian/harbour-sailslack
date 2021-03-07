@@ -108,8 +108,9 @@ Page {
         slackClient.init()
     }
 
-    function handleInitSuccess() {
-        pageStack.replace(Qt.resolvedUrl("ChannelList.qml"), { "slackClient": page.slackClient })
+    function handleInitSuccess(slackClient) {
+        console.assert(pageStack, "pageStack should be here");
+        pageStack.replace(Qt.resolvedUrl("ChannelList.qml"), { "slackClient": slackClient })
     }
 
     function handleInitFail() {
